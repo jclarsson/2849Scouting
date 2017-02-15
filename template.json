@@ -1,0 +1,41 @@
+{
+	"Stand": {
+		"Auto": {
+			"Moved during Auto?" : "",
+			"Number of low goals" : "0",
+			"Number of high goals" : "0",
+			"Number of gears scored": "0",
+			"Other comments" : "",
+			"Updates from subsequent matches" : ""
+		},
+		"Teleop": {
+			"Number of low goals" : "0",
+			"Number of high goals" : "0",
+			"Number of gears scored" : "0",
+			"Has climber" : "",
+			"Drive train quality" : "",
+			"Subsystem quality (Intake, shooter, etc.)" : "",
+			"Build quality, overall" : "",
+			"Interactions with other teams" : "",
+			"Other comments" : "",
+			"Updates from subsequent matches" : ""
+		}
+	},
+	"Pit": {
+		"Drive train type" : "",
+		"Build quality" : "",
+		"Weight of Robot" : "",
+		"Estimated number of possible low goals" : "",
+		"Estimated number of possible high goals" : "",
+		"Estimated number of gears" : "",
+		"Has climber?" : "",
+		"Action(s) during auto" : "",
+		"Preloaded with fuel?" : "",
+		"Total number of motors" : "",
+		"Number of specifically CIM motors" : "",
+		"Good at offense?" : "",
+		"Good at defense?" : "",
+		"Other comments from team" : "",
+		"Fun question (Ask them something to seem friendly)" : ""
+	}
+}
