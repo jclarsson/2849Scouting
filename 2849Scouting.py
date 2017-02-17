@@ -3,6 +3,7 @@
 import sys
 import json
 from pprint import pprint
+import copy
 
 import gi  
 gi.require_version('Gtk', '3.0')  
@@ -127,9 +128,9 @@ class AppWindow(Gtk.ApplicationWindow):
         self.page1.add(self.page1box)
 
 
-        listbox = Gtk.ListBox()  
-        listbox.set_selection_mode(Gtk.SelectionMode.NONE)  
-        self.page1box.pack_start(listbox, True, True, 0)  
+        self.standlistbox = Gtk.ListBox()  
+        self.standlistbox.set_selection_mode(Gtk.SelectionMode.NONE)  
+        self.page1box.pack_start(self.standlistbox, True, True, 0)  
 
         with open('template.json', 'r') as f:
             data = json.load(f)
@@ -145,7 +146,7 @@ class AppWindow(Gtk.ApplicationWindow):
             label1.set_markup("<big><b>" + category + "</b></big>")
             vbox.pack_start(label1, True, True, 0)  
 
-            listbox.add(row)
+            self.standlistbox.add(row)
 
             for item in data["Stand"][category]:
                 row = Gtk.ListBoxRow()  
@@ -157,12 +158,12 @@ class AppWindow(Gtk.ApplicationWindow):
                 label1 = Gtk.Label(item, xalign=0)  
                 vbox.pack_start(label1, True, True, 0)  
 
-                value = Gtk.Entry()  
+                value = Gtk.Entry()
                 value.props.valign = Gtk.Align.CENTER  
                 value.set_text(data["Stand"][category][item])
                 hbox.pack_start(value, False, True, 0)  
 
-                listbox.add(row)
+                self.standlistbox.add(row)
 
 
         self.notebook.append_page(self.page1, Gtk.Label('Stand Scouting'))  
@@ -175,9 +176,9 @@ class AppWindow(Gtk.ApplicationWindow):
         self.page2.add(self.page2box)
 
 
-        listbox = Gtk.ListBox()  
-        listbox.set_selection_mode(Gtk.SelectionMode.NONE)  
-        self.page2box.pack_start(listbox, True, True, 0)  
+        self.pitlistbox = Gtk.ListBox()  
+        self.pitlistbox.set_selection_mode(Gtk.SelectionMode.NONE)  
+        self.page2box.pack_start(self.pitlistbox, True, True, 0)  
 
         for item in data["Pit"]:
             row = Gtk.ListBoxRow()  
@@ -194,7 +195,7 @@ class AppWindow(Gtk.ApplicationWindow):
             value.set_text(data["Pit"][item])
             hbox.pack_start(value, False, True, 0)  
 
-            listbox.add(row)
+            self.pitlistbox.add(row)
 
         self.notebook.append_page(self.page2, Gtk.Label('Pit Scouting'))  
         self.view.add2(self.notebook)  
@@ -242,8 +243,70 @@ class Application(Gtk.Application):
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)  
         about_dialog.present()  
 
-    def on_save(self, action):  
+    def on_save(self, action, param):  
         dialog = SaveDialog(self.window)  
+        
+        with open('template.json', 'r') as f:
+            olddata = json.load(f)
+
+        data = copy.copy(olddata)
+
+        savedata = list()
+        children = self.window.standlistbox.get_children()
+        for child in children:
+            if child is not None:
+                ch2 = child.get_children()
+                for child2 in ch2:
+                    ch3 = child2.get_children()
+                    for child3 in ch3:
+                        if isinstance(child3, Gtk.Entry):
+                            savedata.append(child3.get_text())
+        
+        i = 0
+        j = 0
+        for category in olddata["Stand"]:
+            keys = list()
+            for key in olddata["Stand"][category]:
+                keys.append(key)
+            
+            i = 0
+            for item in olddata["Stand"][category]:
+                keyname = keys[i]
+                data["Stand"][category][keyname] = savedata[j]
+                i = i+1
+                j = j+1
+
+
+
+        savedata = list()
+        children = self.window.pitlistbox.get_children()
+        for child in children:
+            if child is not None:
+                ch2 = child.get_children()
+                for child2 in ch2:
+                    ch3 = child2.get_children()
+                    for child3 in ch3:
+                        if isinstance(child3, Gtk.Entry):
+                            savedata.append(child3.get_text())
+        
+        keys = list()
+        for key in olddata["Pit"]:
+            keys.append(key)
+        
+        i = 0
+        j = 0
+        for item in olddata["Pit"]:
+            keyname = keys[i]
+            data["Pit"][keyname] = savedata[j]
+            i = i+1
+            j = j+1
+        pprint(data)
+        
+        with open('data.json', 'w') as f:
+            json.dump(data, f)
+
+        
+
         response = dialog.run()  
 
     def on_quit(self, action, param):  
