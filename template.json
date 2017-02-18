@@ -1,7 +1,7 @@
 {
 	"Stand": {
 		"Auto": {
-			"Moved during Auto?" : "",
+			"Crossed white line during Auto?" : "",
 			"Number of low goals" : "0",
 			"Number of high goals" : "0",
 			"Number of gears scored": "0",
@@ -12,7 +12,7 @@
 			"Number of low goals" : "0",
 			"Number of high goals" : "0",
 			"Number of gears scored" : "0",
-			"Has climber" : "",
+			"Has working climber" : "",
 			"Drive train quality" : "",
 			"Subsystem quality (Intake, shooter, etc.)" : "",
 			"Build quality, overall" : "",
@@ -31,8 +31,8 @@
 		"Has climber?" : "",
 		"Action(s) during auto" : "",
 		"Preloaded with fuel?" : "",
+		"Preloaded with gear?" : "",
 		"Total number of motors" : "",
-		"Number of specifically CIM motors" : "",
 		"Good at offense?" : "",
 		"Good at defense?" : "",
 		"Other comments from team" : "",

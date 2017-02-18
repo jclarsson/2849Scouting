@@ -102,9 +102,9 @@ class AppWindow(Gtk.ApplicationWindow):
         box_outer1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)  
         self.view.add(box_outer1)  
 
-        teamslist = Gtk.ListBox()  
-        teamslist.set_selection_mode(Gtk.SelectionMode.BROWSE)  
-        box_outer1.pack_start(teamslist, True, True, 0)  
+        self.teamslist = Gtk.ListBox()  
+        self.teamslist.set_selection_mode(Gtk.SelectionMode.BROWSE)  
+        box_outer1.pack_start(self.teamslist, True, True, 0)  
 
         row = Gtk.ListBoxRow()  
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)  
@@ -115,7 +115,7 @@ class AppWindow(Gtk.ApplicationWindow):
         label1 = Gtk.Label("Ursa Major - 2849", xalign=0)  
         vbox.pack_start(label1, True, True, 0)  
 
-        teamslist.add(row)  
+        self.teamslist.add(row)  
 
         self.view.add1(box_outer1)  
 
@@ -302,7 +302,9 @@ class Application(Gtk.Application):
             j = j+1
         pprint(data)
         
-        with open('data.json', 'w') as f:
+        filename = self.window.teamslist.get_children()[0].get_children()[0].get_children()[0].get_children()[0].get_text()
+        
+        with open(filename + ".json", 'w') as f:
             json.dump(data, f)
 
         
