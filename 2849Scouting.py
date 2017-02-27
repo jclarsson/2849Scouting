@@ -4,6 +4,7 @@ import sys
 import json
 from pprint import pprint
 import copy
+import os
 
 import gi  
 gi.require_version('Gtk', '3.0')  
@@ -38,38 +39,28 @@ MENU_XML="""
 </interface>  
 """  
 
-class Team:  
-    def __init__(self, number, name):  
-        self.number = number  
-        self.name = name  
-
-    def __str__(self):  
-        return "+-----+ " + self.name + " +-----+" + "\n" + "Number: " + str(self.number)  
-
-
-
-
-
 class ListBoxRowWithData(Gtk.ListBoxRow):  
     def __init__(self, data):  
         super(Gtk.ListBoxRow, self).__init__()  
         self.data = data  
-        self.add(Gtk.Label(data))  
+        self.add(Gtk.Label(data))
 
-class SaveDialog(Gtk.Dialog):  
+class Dialog(Gtk.Dialog):
 
-    def __init__(self, parent):  
-        Gtk.Dialog.__init__(self, "Save", parent, 0,  
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,  
-             Gtk.STOCK_OK, Gtk.ResponseType.OK))  
+    def __init__(self, parent):
+        Gtk.Dialog.__init__(self, "Add Team", parent, 0,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.OK))
 
-        self.set_default_size(150, 100)  
+        self.set_default_size(150, 100)
 
-        label = Gtk.Label("Saving file...")  
+        label = Gtk.Label("Team number:")
+        self.entry = Gtk.Entry()
 
-        box = self.get_content_area()  
-        box.add(label)  
-        self.show_all()  
+        box = self.get_content_area()
+        box.add(label)
+        box.add(self.entry)
+        self.show_all()
 
 class AppWindow(Gtk.ApplicationWindow):  
 
@@ -81,12 +72,18 @@ class AppWindow(Gtk.ApplicationWindow):
         hb = Gtk.HeaderBar()  
         hb.set_show_close_button(True)  
         hb.props.title = "Ursa Major Scouting"  
-        self.set_titlebar(hb)  
+        self.set_titlebar(hb)   
+
+        self.newbutton = Gtk.Button()  
+        icon = Gio.ThemedIcon(name="document-new-symbolic")  
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON) 
+        self.newbutton.add(image)  
+        hb.pack_start(self.newbutton)  
 
         button = Gtk.Button()  
         icon = Gio.ThemedIcon(name="document-save-symbolic")  
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)  
-        button.connect("clicked", app.on_save)  
+        button.connect("clicked", app.on_save, "")  
         button.add(image)  
         hb.pack_start(button)  
 
@@ -112,14 +109,17 @@ class AppWindow(Gtk.ApplicationWindow):
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)  
         hbox.pack_start(vbox, True, True, 0)  
 
-        label1 = Gtk.Label("Ursa Major - 2849", xalign=0)  
+        label1 = Gtk.Label("2849", xalign=0)  
         vbox.pack_start(label1, True, True, 0)  
 
         self.teamslist.add(row)  
 
         self.view.add1(box_outer1)  
 
+        teamnumber = "template"
+
         self.notebook = Gtk.Notebook()  
+
 
         self.page1 = Gtk.ScrolledWindow()  
         self.page1.set_vexpand(True)
@@ -132,8 +132,10 @@ class AppWindow(Gtk.ApplicationWindow):
         self.standlistbox.set_selection_mode(Gtk.SelectionMode.NONE)  
         self.page1box.pack_start(self.standlistbox, True, True, 0)  
 
-        with open('template.json', 'r') as f:
+        with open(teamnumber + ".json", 'r') as f:
             data = json.load(f)
+
+        self.listboxrows = list()
 
         for category in data["Stand"]:
             row = Gtk.ListBoxRow()  
@@ -164,6 +166,7 @@ class AppWindow(Gtk.ApplicationWindow):
                 hbox.pack_start(value, False, True, 0)  
 
                 self.standlistbox.add(row)
+                self.listboxrows.append(value)
 
 
         self.notebook.append_page(self.page1, Gtk.Label('Stand Scouting'))  
@@ -196,9 +199,58 @@ class AppWindow(Gtk.ApplicationWindow):
             hbox.pack_start(value, False, True, 0)  
 
             self.pitlistbox.add(row)
+            self.listboxrows.append(value)
+
 
         self.notebook.append_page(self.page2, Gtk.Label('Pit Scouting'))  
-        self.view.add2(self.notebook)  
+        self.view.add2(self.notebook) 
+        self.newbutton.connect("clicked", self.newTeam)  
+
+    def openteam(self, teamnumber):
+        print("Opening " + teamnumber)
+
+        if(os.path.exists(teamnumber + ".json")):
+            path = teamnumber + ".json"
+        else:
+            path = "template.json"
+
+
+        with open(path, 'r') as f:
+            data = json.load(f)
+
+        k = 0
+
+        for category in data["Stand"]:
+
+            for item in data["Stand"][category]:
+
+                self.listboxrows[k].set_text(data["Stand"][category][item])
+                k = k + 1
+
+        for item in data["Pit"]:
+            self.listboxrows[k].set_text(data["Pit"][item])
+            k = k + 1
+
+    def newTeam(self, widget):
+        dialog = Dialog(self)
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+
+            row = Gtk.ListBoxRow()  
+            hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)  
+            row.add(hbox)  
+            vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)  
+            hbox.pack_start(vbox, True, True, 0)  
+
+            label1 = Gtk.Label("2849", xalign=0)  
+            vbox.pack_start(label1, True, True, 0)  
+
+            self.teamslist.add(row) 
+
+            self.openteam(dialog.entry.get_text())
+
+        dialog.destroy()
 
 class Application(Gtk.Application):  
 
@@ -244,7 +296,6 @@ class Application(Gtk.Application):
         about_dialog.present()  
 
     def on_save(self, action, param):  
-        dialog = SaveDialog(self.window)  
         
         with open('template.json', 'r') as f:
             olddata = json.load(f)
@@ -307,9 +358,17 @@ class Application(Gtk.Application):
         with open(filename + ".json", 'w') as f:
             json.dump(data, f)
 
+
+        dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.INFO,
+            Gtk.ButtonsType.OK, "File saved")
+        dialog.format_secondary_text(
+            "Information for team " + filename + " has been saved to " + filename + ".json")
+        dialog.run()
+
+        dialog.destroy()
+
         
 
-        response = dialog.run()  
 
     def on_quit(self, action, param):  
         self.quit()  
