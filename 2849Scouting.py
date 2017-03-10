@@ -1,4 +1,4 @@
-#!/usr/bin/env python  
+#!/usr/bin/env python3 
 
 import sys, json, copy, os, gi
 
@@ -283,7 +283,9 @@ class Application(Gtk.Application):
             self.window = AppWindow(application=self, title="Ursa Major Scouting")  
 
 
-        self.window.set_icon_from_file('/home/james/UrsaMajorScouting/0.png')  
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
+        self.window.set_icon_from_file(sys.path[0] + '/0.png')
         self.window.show_all()  
 
     def on_about(self, action, param):  
@@ -368,6 +370,11 @@ class Application(Gtk.Application):
 
     def on_quit(self, action, param):  
         self.quit()  
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 
 if __name__ == "__main__":  
     app = Application()  
