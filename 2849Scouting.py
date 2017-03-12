@@ -1,6 +1,6 @@
 #!/usr/bin/env python3 
 
-import sys, json, copy, os, gi
+import sys, json, copy, os, gi, time
 
 gi.require_version('Gtk', '3.0')  
 from gi.repository import GLib, Gio, Gtk  
@@ -74,13 +74,17 @@ class AppWindow(Gtk.ApplicationWindow):
         self.view = Gtk.Paned()  
         self.add(self.view)  
 
-        box_outer1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)  
-        self.view.add(box_outer1)  
+        box_outer1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6) 
 
-        self.teamslist = Gtk.ListBox()  
+
+        self.teamslistbox = Gtk.ScrolledWindow()  
+        self.teamslistbox.set_vexpand(True)
+        box_outer1.pack_start(self.teamslistbox, True, True, 0)  
+        self.teamslist = Gtk.ListBox()
+        self.teamslistbox.set_property("width-request", 100)
         self.teamslist.set_selection_mode(Gtk.SelectionMode.BROWSE)  
         self.teamslist.connect("row-selected", self.sidebarselected)  
-        box_outer1.pack_start(self.teamslist, True, True, 0)  
+        self.teamslistbox.add(self.teamslist)
 
         self.view.add1(box_outer1)  
 
@@ -253,6 +257,7 @@ class Application(Gtk.Application):
                          **kwargs)  
         self.window = None  
         self.saved = True
+        self.savetime = int(round(time.time() * 1000))
 
     def do_startup(self):  
         Gtk.Application.do_startup(self)  
@@ -293,77 +298,72 @@ class Application(Gtk.Application):
         about_dialog.present()  
 
     def on_save(self, action, param):  
-        
-        with open('Teams/template.json', 'r') as f:
-            olddata = json.load(f)
+        newsavetime = int(round(time.time() * 1000))
 
-        data = copy.copy(olddata)
-
-        savedata = list()
-        children = self.window.standlistbox.get_children()
-        for child in children:
-            if child is not None:
-                ch2 = child.get_children()
-                for child2 in ch2:
-                    ch3 = child2.get_children()
-                    for child3 in ch3:
-                        if isinstance(child3, Gtk.Entry):
-                            savedata.append(child3.get_text())
+        if(newsavetime - self.savetime > 250):
+            self.savetime = newsavetime
         
-        i = 0
-        j = 0
-        for category in olddata["Stand"]:
+            with open('Teams/template.json', 'r') as f:
+                olddata = json.load(f)
+
+            data = copy.copy(olddata)
+
+            savedata = list()
+            children = self.window.standlistbox.get_children()
+            for child in children:
+                if child is not None:
+                    ch2 = child.get_children()
+                    for child2 in ch2:
+                        ch3 = child2.get_children()
+                        for child3 in ch3:
+                            if isinstance(child3, Gtk.Entry):
+                                savedata.append(child3.get_text())
+            
+            i = 0
+            j = 0
+            for category in olddata["Stand"]:
+                keys = list()
+                for key in olddata["Stand"][category]:
+                    keys.append(key)
+                
+                i = 0
+                for item in olddata["Stand"][category]:
+                    keyname = keys[i]
+                    data["Stand"][category][keyname] = savedata[j]
+                    i = i+1
+                    j = j+1
+
+
+
+            savedata = list()
+            children = self.window.pitlistbox.get_children()
+            for child in children:
+                if child is not None:
+                    ch2 = child.get_children()
+                    for child2 in ch2:
+                        ch3 = child2.get_children()
+                        for child3 in ch3:
+                            if isinstance(child3, Gtk.Entry):
+                                savedata.append(child3.get_text())
+            
             keys = list()
-            for key in olddata["Stand"][category]:
+            for key in olddata["Pit"]:
                 keys.append(key)
             
             i = 0
-            for item in olddata["Stand"][category]:
+            j = 0
+            for item in olddata["Pit"]:
                 keyname = keys[i]
-                data["Stand"][category][keyname] = savedata[j]
+                data["Pit"][keyname] = savedata[j]
                 i = i+1
                 j = j+1
+            
+            filename = self.window.teamslist.get_selected_row().get_children()[0].get_text()
+            
+            with open("Teams/" + filename + ".json", 'w') as f:
+                json.dump(data, f)
 
-
-
-        savedata = list()
-        children = self.window.pitlistbox.get_children()
-        for child in children:
-            if child is not None:
-                ch2 = child.get_children()
-                for child2 in ch2:
-                    ch3 = child2.get_children()
-                    for child3 in ch3:
-                        if isinstance(child3, Gtk.Entry):
-                            savedata.append(child3.get_text())
-        
-        keys = list()
-        for key in olddata["Pit"]:
-            keys.append(key)
-        
-        i = 0
-        j = 0
-        for item in olddata["Pit"]:
-            keyname = keys[i]
-            data["Pit"][keyname] = savedata[j]
-            i = i+1
-            j = j+1
-        
-        filename = self.window.teamslist.get_selected_row().get_children()[0].get_text()
-        
-        with open("Teams/" + filename + ".json", 'w') as f:
-            json.dump(data, f)
-
-        self.saved = True
-
-
-        #dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.INFO,
-        #    Gtk.ButtonsType.OK, "File saved")
-        #dialog.format_secondary_text(
-        #    "Information for team " + filename + " has been saved to " + filename + ".json")
-        #dialog.run()
-
-        #dialog.destroy()
+            self.saved = True
 
         
 
