@@ -1,9 +1,10 @@
 #!/usr/bin/env python3 
 
-import sys, json, copy, os, gi, time
+import sys, json, copy, os, gi, time, threading
 
 gi.require_version('Gtk', '3.0')  
-from gi.repository import GLib, Gio, Gtk  
+from gi.repository import GLib, Gio, Gtk
+from subprocess import call
 
 MENU_XML="""  
 <?xml version="1.0" encoding="UTF-8"?>  
@@ -63,13 +64,30 @@ class AppWindow(Gtk.ApplicationWindow):
         icon = Gio.ThemedIcon(name="document-new-symbolic")  
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON) 
         self.newbutton.add(image)  
+        self.newbutton.set_tooltip_text("Add new team") 
         self.hb.pack_start(self.newbutton)  
 
-        #button = Gtk.Button()  
-        #icon = Gio.ThemedIcon(name="preferences-system-symbolic")  
-        #image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)  
-        #button.add(image)  
-        #self.hb.pack_end(button)  
+        self.gitbutton = Gtk.Button()  
+        icon = Gio.ThemedIcon(name="mail-send-receive-symbolic")  
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)  
+        self.gitbutton.add(image)  
+        self.gitbutton.set_tooltip_text("Synchronize with Git") 
+        self.hb.pack_end(self.gitbutton)   
+
+
+        self.popover = Gtk.Popover.new(self.gitbutton)
+        self.popover.set_size_request(50,100)
+        self.popover.set_border_width(10)  
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)  
+        self.popover.add(hbox)  
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)  
+        hbox.pack_start(vbox, True, True, 0)  
+        self.gitlabel = Gtk.Label("")
+
+        self.progressbar = Gtk.ProgressBar()
+        vbox.pack_start(self.progressbar, True, True, 0)  
+        vbox.pack_start(self.gitlabel, True, True, 0)  
+        self.uploading = False
 
         self.view = Gtk.Paned()  
         self.add(self.view)  
@@ -178,6 +196,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.notebook.append_page(self.page2, Gtk.Label('Pit Scouting'))  
         self.view.add2(self.notebook) 
         self.newbutton.connect("clicked", self.newTeam)  
+        self.gitbutton.connect("clicked", self.git)  
 
         dirListing = os.listdir("Teams")   
         editFiles = []
@@ -186,7 +205,6 @@ class AppWindow(Gtk.ApplicationWindow):
                 self.openteam(item.replace(".json", ""))
 
     def openteam(self, teamnumber):
-        print("Opening " + teamnumber)
 
         if(os.path.exists("Teams/" + teamnumber + ".json")):
             path = teamnumber + ".json"
@@ -245,10 +263,31 @@ class AppWindow(Gtk.ApplicationWindow):
             self.listboxrows[k].set_text(data["Pit"][item])
             k = k + 1
 
-        print(app.saved)
-
     def changeSavedStatus(self, widget, ev, data=None):
         app.saved = False
+
+    def git(self, widget):
+        self.popover.show_all()
+        if(self.uploading == False):
+            threading.Thread(target=self.gitaction).start()
+
+    def gitaction(self):
+        self.uploading = True
+        self.gitlabel.set_text("Adding updated files")
+        call(["git", "add", "Teams"])
+        self.progressbar.set_fraction(.25)
+        self.gitlabel.set_text("Committing changes locally")
+        call(["git", "commit",  "-m",  "'More teams'"])
+        self.progressbar.set_fraction(.5)
+        self.gitlabel.set_text("Pushing changes to remote")
+        call(["git", "push"])
+        self.progressbar.set_fraction(.75)
+        self.gitlabel.set_text("Pulling from remote")
+        call(["git", "pull"])
+        self.progressbar.set_fraction(1)
+        self.gitlabel.set_text("Done")
+        self.uploading = False
+        #self.popover.hide()
 
 class Application(Gtk.Application):  
 

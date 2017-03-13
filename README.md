@@ -2,7 +2,9 @@
 
 Simple scouting program from Ursa Major
 
-## Linux Instructions
+##Setup instructions
+
+### Linux Instructions
 
 * Install python3 and pygobject (Ubuntu commands shown)
 
@@ -12,7 +14,7 @@ Simple scouting program from Ursa Major
 
 * CD to folder with 2948Scouting.py in it, run ./2849Scouting.py
 
-## Mac Instructions
+### Mac Instructions
 
 * Install python3 and pygobject
 
@@ -22,6 +24,14 @@ Simple scouting program from Ursa Major
 
 * CD to folder with 2948Scouting.py in it, run ./2849Scouting.py
 
-## Windows
+### Windows
 
 * It should work if you can install python3 and pygobject, but as of now, we haven't been able to get that working.
+
+##To do
+
+[x] Load cells from template
+[x] Saving data
+[x] Git integration
+[ ] Export to table (Either in-program or .ods, or a Markup table)
+[ ] Package for easy installation on Linux, Mac, & Windows
