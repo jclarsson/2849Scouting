@@ -68,9 +68,8 @@ class AppWindow(Gtk.ApplicationWindow):
         self.hb.pack_start(self.newbutton)  
 
         self.gitbutton = Gtk.Button()  
-        icon = Gio.ThemedIcon(name="mail-send-receive-symbolic")  
-        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)  
-        self.gitbutton.add(image)  
+        self.gitimage = Gtk.Image.new_from_gicon(Gio.ThemedIcon(name="mail-send-receive-symbolic") , Gtk.IconSize.BUTTON)  
+        self.gitbutton.set_image(self.gitimage)  
         self.gitbutton.set_tooltip_text("Synchronize with Git") 
         self.hb.pack_end(self.gitbutton)   
 
@@ -273,6 +272,8 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def gitaction(self):
         self.uploading = True
+        self.gitimage = Gtk.Image.new_from_gicon(Gio.ThemedIcon(name="emblem-synchronizing-symbolic") , Gtk.IconSize.BUTTON)
+        self.gitbutton.set_image(self.gitimage)  
         self.gitlabel.set_text("Adding updated files")
         call(["git", "add", "Teams"])
         self.progressbar.set_fraction(.25)
@@ -286,8 +287,9 @@ class AppWindow(Gtk.ApplicationWindow):
         call(["git", "pull"])
         self.progressbar.set_fraction(1)
         self.gitlabel.set_text("Done")
+        self.gitimage = Gtk.Image.new_from_gicon(Gio.ThemedIcon(name="mail-send-receive-symbolic") , Gtk.IconSize.BUTTON)  
+        self.gitbutton.set_image(self.gitimage)  
         self.uploading = False
-        #self.popover.hide()
 
 class Application(Gtk.Application):  
 
