@@ -31,7 +31,11 @@ Simple scouting program from Ursa Major
 ##To do
 
 [x] Load cells from template
+
 [x] Saving data
+
 [x] Git integration
+
 [ ] Export to table (Either in-program or .ods, or a Markup table)
+
 [ ] Package for easy installation on Linux, Mac, & Windows
