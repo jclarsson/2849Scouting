@@ -5,11 +5,22 @@ import sys, json, copy, os, gi, time, threading
 gi.require_version('Gtk', '3.0')  
 from gi.repository import GLib, Gio, Gtk
 from subprocess import call
+from collections import OrderedDict
+try:
+    from pyexcel_ods import save_data
+except ImportError:
+    pass
 
 MENU_XML="""  
 <?xml version="1.0" encoding="UTF-8"?>  
 <interface>  
   <menu id="app-menu">  
+    <section>  
+      <item>  
+        <attribute name="action">app.export</attribute>  
+        <attribute name="label" translatable="yes">_Export to spreadsheet</attribute>  
+      </item>  
+    </section>  
     <section>  
       <item>  
         <attribute name="action">app.about</attribute>  
@@ -52,7 +63,6 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def __init__(self, *args, **kwargs):  
         super().__init__(*args, **kwargs)  
-        #Gtk.ApplicationWindow.__init__(self, title="Ursa Major Scouting")  
         self.set_default_size(800, 570)  
 
         self.hb = Gtk.HeaderBar()  
@@ -72,6 +82,14 @@ class AppWindow(Gtk.ApplicationWindow):
         self.gitbutton.set_image(self.gitimage)  
         self.gitbutton.set_tooltip_text("Synchronize with Git") 
         self.hb.pack_end(self.gitbutton)   
+
+        if('pyexcel_ods' in sys.modules):
+            self.exportbutton = Gtk.Button()  
+            icon = Gio.ThemedIcon(name="document-save-symbolic")  
+            image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON) 
+            self.exportbutton.add(image)  
+            self.exportbutton.set_tooltip_text("Add new team") 
+            self.hb.pack_end(self.exportbutton)  
 
 
         self.popover = Gtk.Popover.new(self.gitbutton)
@@ -196,6 +214,8 @@ class AppWindow(Gtk.ApplicationWindow):
         self.view.add2(self.notebook) 
         self.newbutton.connect("clicked", self.newTeam)  
         self.gitbutton.connect("clicked", self.git)  
+        if('pyexcel_ods' in sys.modules):
+            self.exportbutton.connect("clicked", app.export)  
 
         dirListing = os.listdir("Teams")   
         editFiles = []
@@ -411,6 +431,57 @@ class Application(Gtk.Application):
 
     def on_quit(self, action, param):  
         self.quit()  
+
+    def export(self, action):
+
+        stand = []
+        pit = []
+
+        item = "template.json"
+        teamstand = [item.replace(".json", "")]      
+        teampit = [item.replace(".json", "")]      
+        with open("Teams/" + item, 'r') as f:
+            data = json.load(f)
+
+        for category in data["Stand"]:
+
+            teamstand.append(category)
+
+
+            for item in data["Stand"][category]:
+                teamstand.append(item)
+
+        for item in data["Pit"]:
+            teampit.append(item)
+
+        stand.append(teamstand)
+
+        dirListing = os.listdir("Teams")   
+        editFiles = []
+        for item in dirListing:
+            if ".json" in item and item != "template.json":
+                teamstand = [item.replace(".json", "")]      
+                teampit = [item.replace(".json", "")]      
+                with open("Teams/" + item, 'r') as f:
+                    data = json.load(f)
+
+                for category in data["Stand"]:
+
+                    teamstand.append("")
+
+
+                    for item in data["Stand"][category]:
+                        teamstand.append(data["Stand"][category][item])
+
+                for item in data["Pit"]:
+                    teampit.append(data["Pit"][item])
+
+                stand.append(teamstand)
+        sheetdata = OrderedDict()
+        sheetdata.update({"Stand Scouting": stand})
+        sheetdata.update({"Pit Scouting": pit})
+        save_data("output.ods", sheetdata)
+
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
