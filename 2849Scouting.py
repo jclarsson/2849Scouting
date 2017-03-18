@@ -204,6 +204,7 @@ class AppWindow(Gtk.ApplicationWindow):
             value = Gtk.Entry()  
             value.props.valign = Gtk.Align.CENTER  
             value.set_text(data["Pit"][item])
+            value.connect("key-release-event", app.on_save)  
             hbox.pack_start(value, False, True, 0)  
 
             self.pitlistbox.add(row)
@@ -359,72 +360,67 @@ class Application(Gtk.Application):
         about_dialog.present()  
 
     def on_save(self, action, param):  
-        newsavetime = int(round(time.time() * 1000))
+        with open('Teams/template.json', 'r') as f:
+            olddata = json.load(f)
 
-        if(newsavetime - self.savetime > 250):
-            self.savetime = newsavetime
+        data = copy.copy(olddata)
+
+        savedata = list()
+        children = self.window.standlistbox.get_children()
+        for child in children:
+            if child is not None:
+                ch2 = child.get_children()
+                for child2 in ch2:
+                    ch3 = child2.get_children()
+                    for child3 in ch3:
+                        if isinstance(child3, Gtk.Entry):
+                            savedata.append(child3.get_text())
         
-            with open('Teams/template.json', 'r') as f:
-                olddata = json.load(f)
-
-            data = copy.copy(olddata)
-
-            savedata = list()
-            children = self.window.standlistbox.get_children()
-            for child in children:
-                if child is not None:
-                    ch2 = child.get_children()
-                    for child2 in ch2:
-                        ch3 = child2.get_children()
-                        for child3 in ch3:
-                            if isinstance(child3, Gtk.Entry):
-                                savedata.append(child3.get_text())
-            
-            i = 0
-            j = 0
-            for category in olddata["Stand"]:
-                keys = list()
-                for key in olddata["Stand"][category]:
-                    keys.append(key)
-                
-                i = 0
-                for item in olddata["Stand"][category]:
-                    keyname = keys[i]
-                    data["Stand"][category][keyname] = savedata[j]
-                    i = i+1
-                    j = j+1
-
-
-
-            savedata = list()
-            children = self.window.pitlistbox.get_children()
-            for child in children:
-                if child is not None:
-                    ch2 = child.get_children()
-                    for child2 in ch2:
-                        ch3 = child2.get_children()
-                        for child3 in ch3:
-                            if isinstance(child3, Gtk.Entry):
-                                savedata.append(child3.get_text())
-            
+        i = 0
+        j = 0
+        for category in olddata["Stand"]:
             keys = list()
-            for key in olddata["Pit"]:
+            for key in olddata["Stand"][category]:
                 keys.append(key)
             
             i = 0
-            j = 0
-            for item in olddata["Pit"]:
+            for item in olddata["Stand"][category]:
                 keyname = keys[i]
-                data["Pit"][keyname] = savedata[j]
+                data["Stand"][category][keyname] = savedata[j]
                 i = i+1
                 j = j+1
-            
-            filename = self.window.teamslist.get_selected_row().get_children()[0].get_text()
-            
-            with open("Teams/" + filename + ".json", 'w') as f:
-                json.dump(data, f)
 
-            self.saved = True
+
+
+        savedata = list()
+        children = self.window.pitlistbox.get_children()
+        for child in children:
+            if child is not None:
+                ch2 = child.get_children()
+                for child2 in ch2:
+                    ch3 = child2.get_children()
+                    for child3 in ch3:
+                        if isinstance(child3, Gtk.Entry):
+                            savedata.append(child3.get_text())
+        
+        keys = list()
+        for key in olddata["Pit"]:
+            keys.append(key)
+        
+        i = 0
+        j = 0
+        for item in olddata["Pit"]:
+            keyname = keys[i]
+            data["Pit"][keyname] = savedata[j]
+            i = i+1
+            j = j+1
+        
+        filename = self.window.teamslist.get_selected_row().get_children()[0].get_text()
+        
+        with open("Teams/" + filename + ".json", 'w') as f:
+            json.dump(data, f)
+
+        self.saved = True
 
         
 
