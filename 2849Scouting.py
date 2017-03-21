@@ -17,12 +17,6 @@ MENU_XML="""
   <menu id="app-menu">  
     <section>  
       <item>  
-        <attribute name="action">app.export</attribute>  
-        <attribute name="label" translatable="yes">_Export to spreadsheet</attribute>  
-      </item>  
-    </section>  
-    <section>  
-      <item>  
         <attribute name="action">app.about</attribute>  
         <attribute name="label" translatable="yes">_About</attribute>  
       </item>  
